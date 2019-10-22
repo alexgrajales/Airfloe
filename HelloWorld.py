@@ -6,14 +6,17 @@ from airflow.hooks.base_hook import BaseHook
 from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
 
 from datetime import datetime, timedelta
+from util_slack import tell_slack_success as slack_success
 from airflow.models import Variable
 
 #XCOM abbreviation for cross communication
 #push and pull
 
+def tell_slack_success(context):
+    return slack_success(context)
 
 default_args = {
-    'owner': 'Vaga',
+    'owner': 'Owner',
     'depends_on_past': False,
     'start_date': datetime(2019, 10, 22),
     'email': ['airflow@example.com'],
@@ -28,6 +31,7 @@ dag = DAG(
 
 Stage1 = BashOperator(
     task_id='Hello',
+    on_success_callback=tell_slack_success,
     bash_command='echo {{ var.value.Nombre}}',
     dag=dag)
 

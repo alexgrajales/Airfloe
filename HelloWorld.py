@@ -28,7 +28,7 @@ dag = DAG(
 
 Stage1 = BashOperator(
     task_id='Hello',
-    bash_command='echo {{ var.value.Jordan}}',
+    bash_command='echo {{ var.value.Nombre}}',
     dag=dag)
 
 Stage2 = BashOperator(

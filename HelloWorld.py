@@ -82,7 +82,7 @@ stageSensor = SenseRandomNumber(task_id = 'sensor5', poke_iterval=10, dag=dag)
 task_run_model = SSHOperator(
     task_id="run_model_corenequi",
     ssh_conn_id="sshaws",
-    command="echo 'hola mundo'",
+    command="echo $(ls)",
     do_xcom_push=False,
     on_success_callback=tell_slack_success,
     provide_context=True,

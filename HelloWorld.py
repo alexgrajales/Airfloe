@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 from util_slack import tell_slack_success as slack_success
 from airflow.models import Variable
 from airflow.operators.sensors import BaseSensorOperator
+import logging
+import random
 log = logging.getLogger(__name__)
 
 #XCOM abbreviation for cross communication

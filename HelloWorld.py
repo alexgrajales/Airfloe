@@ -1,9 +1,6 @@
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
-#slack
-from airflow.hooks.base_hook import BaseHook
-from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
 
 from datetime import datetime, timedelta
 from util_slack import tell_slack_success as slack_success
@@ -37,6 +34,7 @@ Stage1 = BashOperator(
 
 Stage2 = BashOperator(
     task_id='World',
+    on_success_callback=tell_slack_success,
     bash_command='echo world',
     dag=dag)
 #function to get the number 7
@@ -45,6 +43,7 @@ def seven():
 #First Way to push using xcom
 Stage3 = PythonOperator(
      task_id = 'try_xcom7',
+    on_success_callback=tell_slack_success,
      python_callable = seven,
      xcom_push=True,
      dag = dag)
@@ -55,6 +54,7 @@ def pushnine(**context):
 #second way to push
 Stage5 = PythonOperator(
     task_id = 'push9',
+    on_success_callback=tell_slack_success,
     python_callable = pushnine,
     dag = dag
     )
@@ -67,30 +67,11 @@ def getNINE(**context):
 #Pull values 
 Stage4 = PythonOperator(
     task_id ='pull_xcom9',
+    on_success_callback=tell_slack_success,
     python_callable=getNINE,
     provide_context=True,
     dag=dag
     )
-
-def tell_slack(**context):
-    webhook = BaseHook.get_connection('Slack2').password
-    message = "hey there! we connected to slack"
-    alterHook = SlackWebhookOperator(
-        task_id = 'integrate_slack',
-        http_conn_id='Slack2',
-        webhook_token=webhook,
-        message = message,
-        username='Vaga',
-        dag=dag)
-    return alterHook.execute(context=context)
-
-
-Stage7 = PythonOperator(
-     task_id ='slack_task2',
-     python_callable=tell_slack,
-     provide_context=True,
-     dag=dag
-   )
 
 
 Stage1 >> Stage2

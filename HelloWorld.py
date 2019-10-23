@@ -1,6 +1,7 @@
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
+from airflow.contrib.operators import SSHOperator
 
 from datetime import datetime, timedelta
 from util_slack import tell_slack_success as slack_success
@@ -71,12 +72,21 @@ class SenseRandomNumber(BaseSensorOperator):
     def poke(self, context):
         current_number = random.randint(1, 100)
         if current_number %2 != 0:
-            log.info("This number (%s) not is dividible by 2, lests have another go.", current_number)
+            log.info("numero (%s) no es divisible por 2, vuelva a intentar.", current_number)
             return False
-        log.info("This number (%s) is dividible by 2, we are done.", current_number)
+        log.info("numero (%s) es divisible por 2, we are done.", current_number)
         return True
 
 stageSensor = SenseRandomNumber(task_id = 'sensor5', poke_iterval=10, dag=dag)
 
+task_run_model = SSHOperator(
+    task_id="run_model_corenequi",
+    ssh_conn_id="sshaws",
+    command="echo 'hola mundo'",
+    do_xcom_push=False,
+    on_success_callback=tell_slack_success,
+    provide_context=True,
+    dag=dag
+)
 
 Stage1 >> Stage2

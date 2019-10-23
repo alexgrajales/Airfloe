@@ -5,6 +5,8 @@ from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
 from util_slack import tell_slack_success as slack_success
 from airflow.models import Variable
+from airflow.operators.sensors import BaseSensorOperator
+log = logging.getLogger(__name__)
 
 #XCOM abbreviation for cross communication
 #push and pull
@@ -37,16 +39,6 @@ Stage2 = BashOperator(
     on_success_callback=tell_slack_success,
     bash_command='echo world',
     dag=dag)
-#function to get the number 7
-def seven():
-    return 7
-#First Way to push using xcom
-Stage3 = PythonOperator(
-     task_id = 'try_xcom7',
-    on_success_callback=tell_slack_success,
-     python_callable = seven,
-     xcom_push=True,
-     dag = dag)
 
 def pushnine(**context):
     context['ti'].xcom_push(key='keyNINE', value=9)
@@ -72,6 +64,17 @@ Stage4 = PythonOperator(
     provide_context=True,
     dag=dag
     )
+
+class SenseRandomNumber(BaseSensorOperator):
+    def poke(self, context):
+        current_number = random.randint(1, 100)
+        if current_number %2 != 0:
+            log.info("This number (%s) not is dividible by 2, lests have another go.", current_number)
+            return False
+        log.info("This number (%s) is dividible by 2, we are done.", current_number)
+        return True
+
+stageSensor = SenseRandomNumber(task_id = 'sensor5', poke_iterval=10, dag=dag)
 
 
 Stage1 >> Stage2
